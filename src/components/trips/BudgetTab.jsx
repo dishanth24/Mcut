@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { PiggyBank, TriangleAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { PiggyBank, TriangleAlert, CheckCircle2, AlertOctagon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,54 @@ import { formatDecimal, formatMoney, toMinor } from '@/lib/money';
 import { categoryOf } from '@/lib/categories';
 import { logActivity } from '@/lib/activity';
 import { displayName } from '@/lib/profile';
+import { motion, useReducedMotion } from 'framer-motion';
+
+function BudgetRing({ percentage, size = 160, strokeWidth = 14, color }) {
+  const shouldReduce = useReducedMotion();
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const cappedPct = Math.min(Math.max(percentage, 0), 100);
+  const strokeDashoffset = circumference - (cappedPct / 100) * circumference;
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width={size} height={size} className="-rotate-90">
+        {/* Track */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="hsl(var(--secondary))"
+          strokeWidth={strokeWidth}
+        />
+        {/* Fill */}
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: shouldReduce ? strokeDashoffset : strokeDashoffset }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* Center percentage */}
+      <div className="absolute flex flex-col items-center justify-center text-center">
+        <span className="font-heading text-3xl font-bold tracking-tight">
+          {percentage}%
+        </span>
+        <span className="text-[0.65rem] uppercase tracking-[0.12em] text-muted-foreground font-semibold">
+          used
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function BudgetTab({ trip, expenses, user, reload }) {
   const currency = trip.currency || 'INR';
@@ -37,100 +85,135 @@ export default function BudgetTab({ trip, expenses, user, reload }) {
     }
   };
 
+  const statusColor =
+    usedPct >= 100 ? '#EF4444' : usedPct >= 80 ? '#F59E0B' : '#2DD4BF';
+
   return (
-    <div className="space-y-5">
-      <div className="card-surface p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base">Trip budget</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              The budget covers every expense recorded on this trip.
-            </p>
+    <div className="space-y-6">
+      {/* ── Main Budget Card with Progress Ring ── */}
+      <div className="card-surface p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-center gap-8 justify-between">
+          <div className="space-y-3 text-center sm:text-left max-w-md">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#2DD4BF]/15 text-[#2DD4BF]">
+                <PiggyBank className="h-4 w-4" />
+              </span>
+              <h2 className="font-heading text-xl sm:text-2xl tracking-tight">Trip budget</h2>
+            </div>
+
+            {budget ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-baseline justify-center sm:justify-start gap-2">
+                  <span className="num font-heading text-3xl sm:text-4xl font-bold">
+                    <Amount value={total} currency={currency} />
+                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    of {formatMoney(budget, currency)}
+                  </span>
+                </div>
+
+                {/* Friendly copy */}
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {usedPct >= 100 ? (
+                    <span className="text-destructive font-semibold flex items-center justify-center sm:justify-start gap-1.5">
+                      <AlertOctagon className="h-4 w-4 shrink-0" />
+                      Over budget by {formatMoney(total - budget, currency)}. Time to trim spending!
+                    </span>
+                  ) : usedPct >= 80 ? (
+                    <span className="text-[#F59E0B] font-semibold flex items-center justify-center sm:justify-start gap-1.5">
+                      <TriangleAlert className="h-4 w-4 shrink-0" />
+                      Heads up! {usedPct}% used, with {formatMoney(budget - total, currency)} remaining.
+                    </span>
+                  ) : (
+                    <span className="text-[#2DD4BF] font-semibold flex items-center justify-center sm:justify-start gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      Looking great! {formatMoney(budget - total, currency)} still available for the trip.
+                    </span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No budget has been set for this trip yet. Set a limit to monitor total group spend in real time.
+              </p>
+            )}
           </div>
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-            <PiggyBank className="h-4 w-4 text-primary" strokeWidth={1.75} />
-          </span>
+
+          {/* Animated Ring */}
+          {budget > 0 && (
+            <div className="shrink-0">
+              <BudgetRing percentage={usedPct} size={150} strokeWidth={14} color={statusColor} />
+            </div>
+          )}
         </div>
 
-        {budget ? (
-          <div className="mt-4 space-y-3">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="num text-2xl font-semibold">
-                <Amount value={total} currency={currency} />
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  of {formatMoney(budget, currency)}
-                </span>
-              </p>
-              <span className={`text-sm font-medium ${usedPct >= 100 ? 'text-destructive' : usedPct >= 80 ? 'text-warning' : 'text-success'}`}>
-                {usedPct}% used
-              </span>
-            </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
-              <div
-                className={`h-full rounded-full ${usedPct >= 100 ? 'bg-destructive' : usedPct >= 80 ? 'bg-warning' : 'bg-success'}`}
-                style={{ width: `${Math.min(usedPct, 100)}%` }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {total > budget
-                ? `${formatMoney(total - budget, currency)} over budget`
-                : `${formatMoney(budget - total, currency)} still available`}
-            </p>
-            {usedPct >= 80 ? (
-              <p className="flex items-center gap-2 rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-                <TriangleAlert className="h-3.5 w-3.5" />
-                {usedPct >= 100 ? 'You have gone past the planned budget.' : 'You are close to the planned budget.'}
-              </p>
-            ) : null}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm text-muted-foreground">No budget set for this trip yet.</p>
-        )}
-
+        {/* Owner Budget Input */}
         {isOwner ? (
-          <div className="mt-5 flex flex-wrap items-end gap-2 border-t border-border pt-4">
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor="budget-input">Set trip budget ({currency})</Label>
+          <div className="mt-7 flex flex-wrap items-end gap-3 border-t border-border/70 pt-5">
+            <div className="flex-1 min-w-[200px] space-y-1.5">
+              <Label htmlFor="budget-input">Set / Update trip budget ({currency})</Label>
               <Input
                 id="budget-input"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 inputMode="decimal"
-                className="num max-w-40 text-right"
-                placeholder="0"
+                className="num h-11 rounded-xl max-w-xs text-right focus-visible:ring-[#D98264]"
+                placeholder="25000"
               />
             </div>
-            <Button onClick={save} disabled={saving}>
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="h-11 rounded-xl bg-[#D98264] hover:bg-[#C97254] text-white border-0 shadow-xs font-semibold px-5"
+            >
               {saving ? 'Saving…' : 'Save budget'}
             </Button>
           </div>
         ) : (
-          <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
-            Only the trip owner can change the budget.
+          <p className="mt-5 border-t border-border/70 pt-4 text-xs text-muted-foreground">
+            Only the trip creator can adjust the budget limit.
           </p>
         )}
       </div>
 
-      <section className="card-surface p-5">
-        <h3 className="text-base">Spending by category</h3>
+      {/* ── Spending by Category ── */}
+      <section className="card-surface p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-heading text-lg tracking-tight">Spending by category</h3>
+          <span className="text-xs text-muted-foreground">{categories.length} categories</span>
+        </div>
+
         {categories.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Add expenses to see category spending.</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            No expenses recorded yet.
+          </p>
         ) : (
-          <div className="mt-4 space-y-3">
+          <div className="space-y-4 pt-1">
             {categories.map((row) => {
               const cat = categoryOf(row.category);
               const pct = total ? Math.round((row.amount_minor / total) * 100) : 0;
+
               return (
-                <div key={row.category}>
-                  <div className="flex items-baseline justify-between text-sm">
-                    <span className="flex items-center gap-2">
+                <div key={row.category} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-2 font-medium">
                       <cat.Icon className="h-3.5 w-3.5 text-primary" strokeWidth={1.9} />
                       {cat.label}
                     </span>
-                    <span className="num">{formatMoney(row.amount_minor, currency)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="num font-semibold text-foreground">
+                        {formatMoney(row.amount_minor, currency)}
+                      </span>
+                      <span className="text-muted-foreground text-[0.68rem] w-8 text-right">
+                        {pct}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-secondary">
-                    <div className="h-full rounded-full bg-primary/80" style={{ width: `${pct}%` }} />
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#D98264] to-[#F59E0B]"
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
               );

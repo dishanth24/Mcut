@@ -104,8 +104,8 @@ export default function MfaMethodSetup({ session, method, onDone, onBack, signIn
 
   const actions = (secondary, onSecondary, primary, onPrimary, disabled = false) => (
     <div className="grid grid-cols-2 gap-3 pt-2">
-      <Button variant="outline" className="h-11" disabled={busy} onClick={onSecondary}>{secondary}</Button>
-      <Button className="h-11" disabled={busy || disabled} onClick={onPrimary}>
+      <Button variant="outline" className="h-10 text-xs border-border/80" disabled={busy} onClick={onSecondary}>{secondary}</Button>
+      <Button className="h-10 text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors" disabled={busy || disabled} onClick={onPrimary}>
         {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
         {primary}
       </Button>

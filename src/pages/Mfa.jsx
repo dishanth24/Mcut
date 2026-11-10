@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import GoogleIcon from "@/components/GoogleIcon";
 import MfaFlow from "@/components/MfaFlow";
 import MfaManage from "@/components/MfaManage";
@@ -39,8 +39,12 @@ export default function Mfa() {
 
   if (resuming) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary border border-primary/20">
+          <ShieldCheck className="h-6 w-6" />
+        </div>
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <p className="text-xs text-muted-foreground">Checking authentication status…</p>
       </div>
     );
   }
@@ -79,41 +83,70 @@ function ConfirmIdentity({ returnTo, onChallenge, initialError }) {
 
   return (
     <>
-      <MfaHeader title={info && `Welcome to ${info.name || "the app"}`} description="Sign in to continue" />
+      <MfaHeader title={info && (info.name ? `Welcome to ${info.name}` : "Security Verification")} description="Sign in to manage your two-factor security methods" />
       <MfaNotice error={error} />
-      {!options && !error && <Loader2 className="mx-auto w-6 h-6 animate-spin text-muted-foreground" />}
+      {!options && !error && <Loader2 className="mx-auto w-6 h-6 animate-spin text-primary" />}
       {options && (
         <div className="space-y-4">
           {providers.map((provider) => (
-            <Button key={provider.id} variant="outline" className="w-full h-12 text-sm font-medium" onClick={() => withProvider(provider.id)}>
-              {provider.id === "google" && <GoogleIcon className="w-5 h-5 mr-2" />}
+            <Button
+              key={provider.id}
+              variant="outline"
+              className="w-full h-11 text-xs font-medium border-border/80 hover:bg-secondary/70 transition-colors"
+              onClick={() => withProvider(provider.id)}
+            >
+              {provider.id === "google" && <GoogleIcon className="w-4 h-4 mr-2" />}
               Continue with {provider.name}
             </Button>
           ))}
           {(options.enable_sso_login || options.use_workspace_sso) && (
-            <Button variant="outline" className="w-full h-12 text-sm font-medium" onClick={() => withProvider("sso")}>
+            <Button
+              variant="outline"
+              className="w-full h-11 text-xs font-medium border-border/80 hover:bg-secondary/70 transition-colors"
+              onClick={() => withProvider("sso")}
+            >
               Continue with SSO
             </Button>
           )}
           {options.enable_username_password && (
-            <form onSubmit={submit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mfa-email">Email</Label>
+            <form onSubmit={submit} className="space-y-3.5 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="mfa-email" className="text-xs font-medium">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  <Input id="mfa-email" type="email" autoComplete="email" placeholder="you@example.com" value={email}
-                    onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12" required />
+                  <Input
+                    id="mfa-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-9 h-10 text-xs bg-background/50 border-border/80 focus:border-primary"
+                    required
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="mfa-password">Password</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="mfa-password" className="text-xs font-medium">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  <Input id="mfa-password" type="password" autoComplete="current-password" placeholder="••••••••" value={password}
-                    onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12" required />
+                  <Input
+                    id="mfa-password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-9 h-10 text-xs bg-background/50 border-border/80 focus:border-primary"
+                    required
+                  />
                 </div>
               </div>
-              <Button type="submit" className="w-full h-12 font-medium" disabled={busy}>
+              <Button
+                type="submit"
+                className="w-full h-10 font-medium text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                disabled={busy}
+              >
                 {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Continue
               </Button>

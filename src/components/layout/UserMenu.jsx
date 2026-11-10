@@ -1,3 +1,4 @@
+import React from 'react';
 import { LogOut, Settings as SettingsIcon, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,8 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/AuthContext';
-import { displayName, initials, userAvatar } from '@/lib/profile';
-import { Image } from '@/components/ui/image';
+import { displayName, userAvatar } from '@/lib/profile';
+import MemberAvatar from '@/components/common/MemberAvatar';
 
 export default function UserMenu({ user, compact = false }) {
   const { logout } = useAuth();
@@ -23,41 +24,42 @@ export default function UserMenu({ user, compact = false }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={compact ? 'h-9 w-9 rounded-full p-0' : 'h-auto w-full justify-start gap-3 rounded-xl px-2 py-2'}
+          className={
+            compact
+              ? 'h-10 w-10 rounded-full p-0 hover:bg-secondary'
+              : 'h-auto w-full justify-start gap-3 rounded-2xl p-2.5 hover:bg-card border border-transparent hover:border-border/60 transition-all'
+          }
         >
-          {avatar ? (
-            <Image src={avatar} alt={name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-              {initials(name) || '?'}
-            </span>
-          )}
+          <MemberAvatar name={name} avatarUrl={avatar} size="md" />
           {!compact ? (
-            <span className="min-w-0 text-left leading-tight">
-              <span className="block truncate text-sm font-medium">{name}</span>
+            <span className="min-w-0 flex-1 text-left leading-tight">
+              <span className="block truncate text-sm font-semibold text-foreground">{name}</span>
               <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>
             </span>
           ) : null}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <p className="truncate text-sm font-medium">{name}</p>
+      <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5 shadow-lg">
+        <DropdownMenuLabel className="font-normal px-2.5 py-2">
+          <p className="truncate text-sm font-semibold">{name}</p>
           <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="gap-2">
+        <DropdownMenuItem asChild className="rounded-xl px-2.5 py-2">
+          <Link to="/settings" className="flex items-center gap-2 text-sm">
             <UserRound className="h-4 w-4" strokeWidth={1.75} /> Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="gap-2">
+        <DropdownMenuItem asChild className="rounded-xl px-2.5 py-2">
+          <Link to="/settings" className="flex items-center gap-2 text-sm">
             <SettingsIcon className="h-4 w-4" strokeWidth={1.75} /> Settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => logout()} className="gap-2 text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onClick={() => logout()}
+          className="rounded-xl px-2.5 py-2 flex items-center gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 text-sm"
+        >
           <LogOut className="h-4 w-4" strokeWidth={1.75} /> Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -1,27 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Paperclip } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CATEGORIES } from '@/lib/categories';
 import { allocateByWeights, allocateEven, formatDecimal, formatMoney, toMinor } from '@/lib/money';
 import { todayISO } from '@/lib/trips';
 import { logActivity } from '@/lib/activity';
 import { displayName } from '@/lib/profile';
+import { cn } from '@/lib/utils';
 import SplitEditor from '@/components/expenses/SplitEditor';
 import PayerEditor from '@/components/expenses/PayerEditor';
+import MemberAvatar from '@/components/common/MemberAvatar';
 
 export default function ExpenseDialog({ open, onOpenChange, trip, members, user, expense, onSaved }) {
   const currency = trip?.currency || 'INR';
@@ -208,7 +206,7 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
         await logActivity({
           trip,
           type: 'expense_updated',
-          message: `${displayName(user)} updated “${payload.title}”`,
+          message: `${displayName(user)} updated "${payload.title}"`,
           actor: { id: user.id, name: displayName(user) },
           amountMinor: totalMinor,
           currency,
@@ -219,7 +217,7 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
         await logActivity({
           trip,
           type: 'expense_added',
-          message: `${displayName(user)} added “${payload.title}”`,
+          message: `${displayName(user)} added "${payload.title}"`,
           actor: { id: user.id, name: displayName(user) },
           amountMinor: totalMinor,
           currency,
@@ -238,60 +236,79 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-heading text-2xl">{isEdit ? 'Edit expense' : 'Add expense'}</DialogTitle>
-          <DialogDescription>
-            {trip?.name} · amounts in {currency}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg p-0">
+        {/* Top gradient panel: amount + currency */}
+        <div className="bg-gradient-to-b from-secondary/80 to-background p-6 rounded-t-2xl">
+          <div className="flex items-start justify-between mb-4">
+            <DialogHeader className="flex-1 min-w-0 pr-4">
+              <DialogTitle className="font-heading text-2xl">{isEdit ? 'Edit expense' : 'Add expense'}</DialogTitle>
+              <DialogDescription>{trip?.name} · amounts in {currency}</DialogDescription>
+            </DialogHeader>
+            <span className="shrink-0 rounded-full bg-card border border-white/10 px-3 py-1 text-sm font-medium">
+              {currency}
+            </span>
+          </div>
 
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
-            <div className="space-y-1.5">
-              <Label htmlFor="expense-title">Title</Label>
-              <Input
-                id="expense-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Dinner at the beach shack"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="expense-amount">Amount</Label>
-              <Input
-                id="expense-amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                inputMode="decimal"
-                placeholder="0.00"
-                className="num text-right"
-              />
+          {/* Big amount input */}
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            inputMode="decimal"
+            placeholder="0.00"
+            className="num text-5xl font-bold bg-transparent text-center w-full outline-none placeholder:text-muted-foreground/40"
+          />
+        </div>
+
+        {/* Rest of form */}
+        <div className="px-6 pb-6 space-y-5">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <Label htmlFor="expense-title">Title</Label>
+            <Input
+              id="expense-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Dinner at the beach shack"
+              className="h-11 rounded-xl"
+            />
+          </div>
+
+          {/* Category picker grid */}
+          <div className="space-y-1.5">
+            <Label>Category</Label>
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategory(cat.id)}
+                  className={cn(
+                    'flex flex-col items-center gap-1 rounded-xl p-2 text-[0.65rem] transition-all border',
+                    category === cat.id
+                      ? 'border-brand-orange bg-brand-orange/15 text-brand-orange'
+                      : 'border-transparent bg-secondary/60 text-muted-foreground hover:bg-secondary'
+                  )}
+                >
+                  <cat.Icon className="h-5 w-5" strokeWidth={1.75} />
+                  <span className="text-center leading-tight">{cat.label.split(' ')[0]}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="expense-date">Date</Label>
-              <Input id="expense-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
+          {/* Date */}
+          <div className="space-y-1.5">
+            <Label htmlFor="expense-date">Date</Label>
+            <Input
+              id="expense-date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="h-11 rounded-xl"
+            />
           </div>
 
+          {/* Paid by */}
           <div className="space-y-1.5">
             <Label>Paid by</Label>
             <PayerEditor
@@ -306,6 +323,7 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
             {payerError ? <p className="text-xs text-destructive">{payerError}</p> : null}
           </div>
 
+          {/* Split between: avatar toggle buttons */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Split between</Label>
@@ -321,22 +339,27 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
                 {participantIds.length === members.length ? 'Clear all' : 'Select all'}
               </button>
             </div>
-            <div className="grid gap-1.5 sm:grid-cols-2">
+            <div className="flex flex-wrap gap-2">
               {members.map((m) => (
-                <label
+                <button
                   key={m.user_id}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-sm"
+                  type="button"
+                  onClick={() => toggleParticipant(m.user_id)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl px-3 py-2 h-10 text-sm border transition-all',
+                    participantIds.includes(m.user_id)
+                      ? 'border-brand-teal bg-brand-teal/15 text-brand-teal'
+                      : 'border-border bg-secondary/60 text-muted-foreground'
+                  )}
                 >
-                  <Checkbox
-                    checked={participantIds.includes(m.user_id)}
-                    onCheckedChange={() => toggleParticipant(m.user_id)}
-                  />
-                  <span className="truncate">{m.user_name}</span>
-                </label>
+                  <MemberAvatar name={m.user_name} size="xs" />
+                  <span>{m.user_name}</span>
+                </button>
               ))}
             </div>
           </div>
 
+          {/* How to split */}
           <div className="space-y-1.5">
             <Label>How to split</Label>
             <SplitEditor
@@ -351,37 +374,19 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="expense-merchant">Merchant (optional)</Label>
-              <Input
-                id="expense-merchant"
-                value={merchant}
-                onChange={(e) => setMerchant(e.target.value)}
-                placeholder="Cafe Mocha"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="expense-receipt">Receipt (optional)</Label>
-              <label
-                htmlFor="expense-receipt"
-                className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-muted-foreground"
-              >
-                <Paperclip className="h-3.5 w-3.5" />
-                <span className="truncate">
-                  {receipt ? receipt.name : expense?.receipt_uri ? 'Replace receipt' : 'Attach a file'}
-                </span>
-              </label>
-              <input
-                id="expense-receipt"
-                type="file"
-                accept="image/*,application/pdf"
-                className="hidden"
-                onChange={(e) => setReceipt(e.target.files?.[0] || null)}
-              />
-            </div>
+          {/* Merchant */}
+          <div className="space-y-1.5">
+            <Label htmlFor="expense-merchant">Merchant (optional)</Label>
+            <Input
+              id="expense-merchant"
+              value={merchant}
+              onChange={(e) => setMerchant(e.target.value)}
+              placeholder="Cafe Mocha"
+              className="h-11 rounded-xl"
+            />
           </div>
 
+          {/* Notes */}
           <div className="space-y-1.5">
             <Label htmlFor="expense-notes">Notes (optional)</Label>
             <Textarea
@@ -393,18 +398,63 @@ export default function ExpenseDialog({ open, onOpenChange, trip, members, user,
             />
           </div>
 
-          {error ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
-        </div>
+          {/* Receipt upload */}
+          <div className="space-y-1.5">
+            <Label>Receipt (optional)</Label>
+            <label
+              htmlFor="expense-receipt"
+              className="flex h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/10 bg-secondary/40 hover:border-brand-orange/40 hover:bg-brand-orange/5 transition-all overflow-hidden"
+            >
+              {receipt ? (
+                receipt.type.startsWith('image/') ? (
+                  <img
+                    src={URL.createObjectURL(receipt)}
+                    className="h-20 w-full object-cover rounded-xl"
+                    alt="receipt"
+                  />
+                ) : (
+                  <span className="text-xs text-muted-foreground px-3 text-center truncate max-w-full">{receipt.name}</span>
+                )
+              ) : (
+                <>
+                  <Paperclip className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Attach receipt (optional)</span>
+                </>
+              )}
+            </label>
+            <input
+              id="expense-receipt"
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+            />
+          </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save expense'}
-          </Button>
-        </DialogFooter>
+          {/* Error */}
+          {error ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+
+          {/* Footer buttons */}
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="w-full h-12 rounded-2xl bg-brand-orange text-white font-medium hover:bg-[#C97254] text-base transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save expense'}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              disabled={saving}
+              className="w-full h-11 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

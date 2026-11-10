@@ -1,75 +1,116 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Compass, Sparkles, MapPinOff, ArrowLeft } from 'lucide-react';
 
+export default function PageNotFound() {
+  const location = useLocation();
+  const pageName = location.pathname.substring(1);
 
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
+  const { data: authData, isFetched } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      try {
+        const user = await base44.auth.me();
+        return { user, isAuthenticated: true };
+      } catch {
+        return { user: null, isAuthenticated: false };
+      }
+    },
+  });
 
-    const { data: authData, isFetched } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            try {
-                const user = await base44.auth.me();
-                return { user, isAuthenticated: true };
-            } catch (error) {
-                return { user: null, isAuthenticated: false };
-            }
-        }
-    });
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-            <div className="max-w-md w-full">
-                <div className="text-center space-y-6">
-                    {/* 404 Error Code */}
-                    <div className="space-y-2">
-                        <h1 className="text-7xl font-light text-slate-300">404</h1>
-                        <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
-                    </div>
-                    
-                    {/* Main Message */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
-                        </p>
-                    </div>
-                    
-                    {/* Admin Note */}
-                    {isFetched && authData.isAuthenticated && authData.user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-100 rounded-lg border border-slate-200">
-                            <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                </div>
-                                <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">Admin Note</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                        This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* Action Button */}
-                    <div className="pt-6">
-                        <button 
-                            onClick={() => window.location.href = '/'} 
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            Go Home
-                        </button>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className="relative min-h-screen flex items-center justify-center p-6 bg-background overflow-hidden">
+      {/* Ambient background glows */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-[#D98264]/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-[#2DD4BF]/10 blur-3xl"
+      />
+
+      <div className="card-surface relative max-w-lg w-full p-8 sm:p-10 text-center shadow-2xl border-border/80">
+        {/* Animated Travel Compass / Lost Path Illustration */}
+        <div className="relative mx-auto mb-6 flex h-28 w-28 items-center justify-center">
+          {/* Outer compass ring */}
+          <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/30 animate-[spin_25s_linear_infinite]" />
+          
+          {/* Subtle teal radar glow */}
+          <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-primary/15 via-[#2DD4BF]/10 to-transparent" />
+
+          {/* Center Lost Trip Graphic */}
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 text-primary border border-primary/30 shadow-lg ring-4 ring-primary/10">
+            <MapPinOff className="h-8 w-8 stroke-[1.8]" />
+          </div>
+
+          {/* Floating itinerary dots */}
+          <span className="absolute -top-1 right-2 flex h-3 w-3 items-center justify-center">
+            <span className="h-2 w-2 rounded-full bg-[#2DD4BF] animate-ping" />
+          </span>
+          <span className="absolute bottom-2 -left-1">
+            <Sparkles className="h-4 w-4 text-warning animate-pulse" />
+          </span>
         </div>
-    )
+
+        {/* 404 Badge */}
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+          <Compass className="h-3.5 w-3.5" />
+          <span>Error 404 · Route Not Found</span>
+        </div>
+
+        {/* Headline & Subtext */}
+        <div className="mt-4 space-y-2">
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Looks like this stop isn't on the itinerary.
+          </h1>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+            The page <span className="font-medium text-foreground">"{pageName || 'requested'}"</span> drifted off the map or does not exist in this expedition.
+          </p>
+        </div>
+
+        {/* Action Button */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Button
+            asChild
+            className="w-full sm:w-auto gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-xs px-5 h-10 shadow-sm"
+          >
+            <Link to="/">
+              <Compass className="h-4 w-4" />
+              <span>Back to safe travels</span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="w-full sm:w-auto gap-1.5 text-xs h-10 border-border/80 hover:bg-secondary/70"
+          >
+            <Link to="/trips">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>My Trips</span>
+            </Link>
+          </Button>
+        </div>
+
+        {/* Admin Note */}
+        {isFetched && authData?.isAuthenticated && authData.user?.role === 'admin' && (
+          <div className="mt-8 p-3.5 rounded-xl border border-warning/30 bg-warning/5 text-left text-xs">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-warning/20">
+                <div className="h-1.5 w-1.5 rounded-full bg-warning" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-foreground">Admin Diagnostic</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Route <code className="rounded bg-secondary/80 px-1 py-0.5 text-foreground font-mono">/{pageName}</code> is currently unhandled by the React router tree.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

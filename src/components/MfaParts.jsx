@@ -28,8 +28,15 @@ export function useAppInfo() {
 // shows them returns <MfaScreen> in place of its own layout instead of nesting them in its card.
 export function MfaScreen({ children }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="w-full max-w-md bg-card rounded-2xl shadow-sm border border-border p-8">{children}</div>
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      {/* Ambient background glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-primary/10 blur-3xl"
+      />
+      <div className="card-surface relative w-full max-w-md p-6 sm:p-8 shadow-2xl border-border/80">
+        {children}
+      </div>
     </div>
   );
 }
@@ -39,11 +46,13 @@ export function MfaScreen({ children }) {
 export function MfaHeader({ title, description }) {
   return (
     <div className="flex flex-col items-center text-center mb-6">
-      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
-        <ShieldCheck className="w-7 h-7 text-primary-foreground" aria-hidden="true" />
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 text-primary border border-primary/25 ring-4 ring-primary/10 mb-4 shadow-xs">
+        <ShieldCheck className="w-7 h-7" aria-hidden="true" />
       </div>
-      <h1 className="text-2xl font-bold tracking-tight text-foreground min-h-[2rem]">{title}</h1>
-      {description && <p className="text-muted-foreground mt-2">{description}</p>}
+      <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground min-h-[2rem]">
+        {title}
+      </h1>
+      {description && <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed">{description}</p>}
     </div>
   );
 }
@@ -53,13 +62,27 @@ export function MfaHeader({ title, description }) {
 export function CodeField({ id, label = "Enter the 6-digit code", value, onChange, onComplete, hasError = false }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="block text-center font-normal text-muted-foreground">{label}</Label>
-      <InputOTP id={id} maxLength={6} value={value} autoFocus autoComplete="one-time-code" containerClassName="justify-center"
+      <Label htmlFor={id} className="block text-center text-xs font-medium text-muted-foreground">{label}</Label>
+      <InputOTP
+        id={id}
+        maxLength={6}
+        value={value}
+        autoFocus
+        autoComplete="one-time-code"
+        containerClassName="justify-center gap-1.5"
         onChange={(next) => { onChange(next); if (next.length === 6) onComplete?.(next); }}
-        onKeyDown={(e) => { if (e.key === "Enter" && onComplete) { e.preventDefault(); onComplete(value); } }}>
-        <InputOTPGroup>
+        onKeyDown={(e) => { if (e.key === "Enter" && onComplete) { e.preventDefault(); onComplete(value); } }}
+      >
+        <InputOTPGroup className="gap-1.5">
           {[0, 1, 2, 3, 4, 5].map((index) => (
-            <InputOTPSlot key={index} index={index} className={hasError ? "border-destructive" : undefined} />
+            <InputOTPSlot
+              key={index}
+              index={index}
+              className={cn(
+                "h-12 w-11 rounded-lg border border-border/80 bg-background/50 font-mono text-base font-semibold shadow-xs transition-colors",
+                hasError ? "border-destructive text-destructive" : "focus:border-primary focus:ring-1 focus:ring-primary"
+              )}
+            />
           ))}
         </InputOTPGroup>
       </InputOTP>
@@ -71,17 +94,22 @@ export function CodeField({ id, label = "Enter the 6-digit code", value, onChang
 export function ResendLine({ cooldown, disabled, onResend, error }) {
   return (
     <div className="space-y-1 text-center">
-      <p className="text-sm text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         Didn't receive a code?{" "}
         {cooldown > 0 ? (
-          <span>Resend in {cooldown}s</span>
+          <span className="font-medium text-foreground">Resend in {cooldown}s</span>
         ) : (
-          <button type="button" disabled={disabled} onClick={onResend} className="font-semibold text-foreground hover:underline disabled:opacity-50">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onResend}
+            className="font-semibold text-primary hover:underline disabled:opacity-50 transition-colors"
+          >
             Resend
           </button>
         )}
       </p>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -133,8 +161,14 @@ function DialCodePicker({ value, onChange }) {
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" role="combobox" aria-expanded={open} aria-label="Country code"
-          className="h-10 w-[100px] justify-between px-2.5 font-normal shadow-none">
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-label="Country code"
+          className="h-10 w-[100px] justify-between px-2.5 font-normal shadow-none border-border/80 bg-background/50"
+        >
           {value}
           <ChevronsUpDown className="ml-1 h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
         </Button>
@@ -169,15 +203,26 @@ export function PhoneField({ countryCode, onCountryCodeChange, phoneNumber, onPh
     <div className="space-y-1.5">
       <div className="flex gap-2">
         <DialCodePicker value={countryCode} onChange={onCountryCodeChange} />
-        <Input id="mfa-phone" type="tel" autoComplete="tel-national" autoFocus value={phoneNumber} maxLength={15}
-          placeholder="5551234567" aria-invalid={Boolean(message)}
+        <Input
+          id="mfa-phone"
+          type="tel"
+          autoComplete="tel-national"
+          autoFocus
+          value={phoneNumber}
+          maxLength={15}
+          placeholder="5551234567"
+          aria-invalid={Boolean(message)}
           onChange={(e) => { onPhoneNumberChange(e.target.value.replace(/\D/g, "")); setTouched(true); }}
           onKeyDown={(e) => { if (e.key === "Enter" && onSubmit) { e.preventDefault(); onSubmit(); } }}
-          className={cn("h-10 flex-1", message && "border-destructive focus-visible:ring-destructive")} />
+          className={cn(
+            "h-10 flex-1 bg-background/50 border-border/80",
+            message && "border-destructive focus-visible:ring-destructive"
+          )}
+        />
       </div>
       {message
-        ? <p className="text-sm text-destructive">{message}</p>
-        : <p className="text-sm text-muted-foreground">Standard message and data rates may apply.</p>}
+        ? <p className="text-xs text-destructive">{message}</p>
+        : <p className="text-[11px] text-muted-foreground">Standard carrier message and data rates may apply.</p>}
     </div>
   );
 }
@@ -192,15 +237,20 @@ export function CopyKeyButton({ text, wide = false }) {
   };
   if (wide) {
     return (
-      <Button type="button" variant="outline" className="w-full h-11" onClick={copy}>
-        {copied ? "Copied" : "Copy key"}
+      <Button type="button" variant="outline" className="w-full h-11 text-xs border-border/80" onClick={copy}>
+        {copied ? "Copied to clipboard" : "Copy key"}
       </Button>
     );
   }
   return (
-    <button type="button" onClick={copy} title="Copy to clipboard" aria-label="Copy to clipboard"
-      className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground hover:bg-muted">
-      {copied ? <Check className="w-4 h-4" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
+    <button
+      type="button"
+      onClick={copy}
+      title="Copy to clipboard"
+      aria-label="Copy to clipboard"
+      className="inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors"
+    >
+      {copied ? <Check className="w-4 h-4 text-primary" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
     </button>
   );
 }
@@ -212,11 +262,11 @@ export function MfaNotice({ error, signInPath = "/login" }) {
   if (!error) return null;
   const returnTo = safeReturnTo();
   return (
-    <div role="alert" className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
+    <div role="alert" className="mb-4 p-3 rounded-xl border border-destructive/20 bg-destructive/10 text-destructive text-xs text-center">
       {error.mustSignInAgain ? (
         <>
-          Your sign-in expired.{" "}
-          <a href={signInPath + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")} className="font-medium underline">
+          Your sign-in session expired.{" "}
+          <a href={signInPath + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")} className="font-semibold underline">
             Sign in again
           </a>
         </>
@@ -227,8 +277,13 @@ export function MfaNotice({ error, signInPath = "/login" }) {
 
 export function RememberDevice({ checked, onChange }) {
   return (
-    <label className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-      <input type="checkbox" className="h-4 w-4 accent-primary" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    <label className="flex items-center justify-center gap-2 text-xs text-muted-foreground cursor-pointer">
+      <input
+        type="checkbox"
+        className="h-4 w-4 rounded accent-primary border-border focus:ring-primary"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
       Remember this device for 30 days
     </label>
   );

@@ -10,18 +10,24 @@ export default function BalanceSummary({ youOwe, owedToYou, net, currency }) {
         value={<Amount value={youOwe || 0} currency={currency} tone={youOwe ? 'negative' : 'muted'} />}
         Icon={ArrowUpRight}
         hint="Across confirmed expenses and settlements"
+        tone={youOwe > 0 ? 'negative' : 'default'}
+        accent={youOwe > 0 ? 'negative' : 'neutral'}
       />
       <StatCard
         label="Owed to you"
         value={<Amount value={owedToYou || 0} currency={currency} tone={owedToYou ? 'positive' : 'muted'} />}
         Icon={ArrowDownLeft}
         hint="Money trip mates still owe you"
+        tone={owedToYou > 0 ? 'positive' : 'default'}
+        accent={owedToYou > 0 ? 'positive' : 'neutral'}
       />
       <StatCard
         label="Net balance"
         value={<Amount value={net || 0} currency={currency} tone={net > 0 ? 'positive' : net < 0 ? 'negative' : 'muted'} signed />}
         Icon={Scale}
         hint={net > 0 ? 'You should receive money' : net < 0 ? 'You should pay money' : 'All square'}
+        tone={net > 0 ? 'positive' : net < 0 ? 'negative' : 'default'}
+        accent={net > 0 ? 'positive' : net < 0 ? 'negative' : 'neutral'}
       />
     </div>
   );

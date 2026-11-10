@@ -45,6 +45,12 @@
     --sidebar-accent-foreground: 36 7% 15%;
     --sidebar-border: 32 28% 87%;
     --sidebar-ring: 15 52% 55%;
+    --brand-orange: #D98264;
+    --brand-orange-dark: #C97254;
+    --brand-teal: #2DD4BF;
+    --brand-teal-dark: #14B8A6;
+    --brand-violet: #8B5CF6;
+    --brand-amber: #F59E0B;
   }
 
   .dark {
@@ -114,7 +120,23 @@
   }
 
   .card-surface {
-    @apply rounded-2xl border border-border bg-card;
+    @apply rounded-2xl border border-border bg-card transition-all;
+  }
+
+  .glass-card {
+    @apply rounded-2xl border border-border/70 bg-card/85 backdrop-blur-md shadow-sm transition-all;
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 30px -5px rgba(217, 130, 100, 0.22);
+  }
+
+  .glow-teal {
+    box-shadow: 0 0 30px -5px rgba(45, 212, 191, 0.22);
+  }
+
+  .inner-border {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
   }
 
   .field-label {
@@ -128,6 +150,21 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #D98264 0%,
+      #f0b088 40%,
+      #D98264 60%,
+      #C97254 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
   }
 }
 

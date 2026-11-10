@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, QrCode } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +17,7 @@ import { formatDecimal, toMinor } from '@/lib/money';
 import { todayISO } from '@/lib/trips';
 import { logActivity } from '@/lib/activity';
 import { displayName } from '@/lib/profile';
+import UpiQrDialog from '@/components/common/UpiQrDialog';
 
 export default function SettlementDialog({ open, onOpenChange, trip, members, user, preset, onSaved }) {
   const currency = trip?.currency || 'INR';
@@ -94,7 +95,7 @@ export default function SettlementDialog({ open, onOpenChange, trip, members, us
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-3xl border-border/80">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl">Record a settlement</DialogTitle>
           <DialogDescription>
@@ -108,10 +109,10 @@ export default function SettlementDialog({ open, onOpenChange, trip, members, us
             <div className="space-y-1.5">
               <Label>From</Label>
               <Select value={fromId} onValueChange={setFromId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue placeholder="Who paid" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {members.map((m) => (
                     <SelectItem key={m.user_id} value={m.user_id}>
                       {m.user_name}
@@ -123,10 +124,10 @@ export default function SettlementDialog({ open, onOpenChange, trip, members, us
             <div className="space-y-1.5">
               <Label>To</Label>
               <Select value={toId} onValueChange={setToId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue placeholder="Who received" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl">
                   {members
                     .filter((m) => m.user_id !== fromId)
                     .map((m) => (
@@ -147,47 +148,74 @@ export default function SettlementDialog({ open, onOpenChange, trip, members, us
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 inputMode="decimal"
-                className="num text-right"
+                className="num text-right h-11 rounded-xl"
                 placeholder="0.00"
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="settle-date">Date</Label>
-              <Input id="settle-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Input id="settle-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11 rounded-xl" />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="settle-note">Note (optional)</Label>
-            <Input id="settle-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Paid via UPI" />
+            <Input id="settle-note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Paid via UPI / GPay" className="h-11 rounded-xl" />
           </div>
 
-          {upiLink ? (
-            <div className="rounded-xl border border-border bg-secondary/50 p-3">
-              <p className="text-xs text-muted-foreground">
-                {recipient.user_name}'s UPI ID:{' '}
-                <span className="font-medium text-foreground">{recipient.upi_id}</span>
-              </p>
-              <Button asChild variant="outline" size="sm" className="mt-2">
-                <a href={upiLink}>
-                  <ExternalLink className="h-3.5 w-3.5" /> Open UPI app
-                </a>
-              </Button>
-              <p className="mt-2 text-[0.7rem] text-muted-foreground">
-                Opening a payment app is not proof of payment — the settlement stays pending until it is confirmed.
+          {/* UPI Instant QR Code & Deep Link Card */}
+          {recipient?.upi_id && currency === 'INR' ? (
+            <div className="rounded-2xl border border-[#2DD4BF]/30 bg-[#2DD4BF]/5 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">{recipient.user_name}'s UPI ID:</p>
+                  <p className="font-mono text-sm font-semibold text-foreground">{recipient.upi_id}</p>
+                </div>
+
+                <UpiQrDialog
+                  upiId={recipient.upi_id}
+                  name={recipient.user_name}
+                  amountMinor={amountMinor}
+                  currency="INR"
+                  note={trip?.name || 'Mcut Settlement'}
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="rounded-xl border-[#2DD4BF]/50 text-[#2DD4BF] hover:bg-[#2DD4BF]/15 gap-1.5 text-xs font-semibold h-9"
+                    >
+                      <QrCode className="h-3.5 w-3.5" />
+                      <span>Scan QR Code</span>
+                    </Button>
+                  }
+                />
+              </div>
+
+              {upiLink && (
+                <div className="flex gap-2 pt-1">
+                  <Button asChild size="sm" className="flex-1 rounded-xl bg-[#2DD4BF] text-slate-900 hover:bg-[#14B8A6] font-semibold text-xs h-9">
+                    <a href={upiLink}>
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" /> Open UPI App (GPay/PhonePe)
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              <p className="text-[0.68rem] text-muted-foreground leading-tight">
+                Opening an app or scanning QR is convenient for transfer — this settlement stays pending until the receiver confirms.
               </p>
             </div>
           ) : null}
 
-          {error ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+          {error ? <p className="rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</p> : null}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+        <DialogFooter className="gap-2 pt-2 border-t border-border/60">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving} className="rounded-xl">
             Cancel
           </Button>
-          <Button onClick={submit} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          <Button onClick={submit} disabled={saving} className="rounded-xl bg-[#D98264] hover:bg-[#C97254] text-white font-semibold">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
             {saving ? 'Recording…' : 'Record payment'}
           </Button>
         </DialogFooter>

@@ -68,7 +68,13 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			'brand-orange': '#D98264',
+  			'brand-orange-dark': '#C97254',
+  			'brand-teal': '#2DD4BF',
+  			'brand-teal-dark': '#14B8A6',
+  			'brand-violet': '#8B5CF6',
+  			'brand-amber': '#F59E0B',
   		},
   		fontFamily: {
   			heading: ['var(--font-heading)'],
@@ -92,11 +98,27 @@ module.exports = {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+  			'float': {
+  				'0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+  				'50%': { transform: 'translateY(-8px) rotate(1deg)' },
+  			},
+  			'shimmer': {
+  				'0%': { backgroundPosition: '-200% center' },
+  				'100%': { backgroundPosition: '200% center' },
+  			},
+  			'drift': {
+  				'0%, 100%': { transform: 'translateY(0px) translateX(0px)' },
+  				'33%': { transform: 'translateY(-6px) translateX(3px)' },
+  				'66%': { transform: 'translateY(4px) translateX(-3px)' },
+  			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'float': 'float 4s ease-in-out infinite',
+  			'shimmer': 'shimmer 3s linear infinite',
+  			'drift': 'drift 5s ease-in-out infinite',
   		}
   	}
   },
