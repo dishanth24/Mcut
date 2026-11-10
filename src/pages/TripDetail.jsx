@@ -188,7 +188,7 @@ export default function TripDetail() {
       {/* ── Rich Hero Header with Purple/Gradient Cover and Stickers ── */}
       <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card shadow-lg">
         {trip.cover_image ? (
-          <div className="relative h-44 sm:h-56 md:h-64 w-full overflow-hidden">
+          <div className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden">
             <img
               src={trip.cover_image}
               alt={trip.name}
@@ -198,10 +198,12 @@ export default function TripDetail() {
             <TripHeroStickers destination={trip.destination} status={status} />
           </div>
         ) : (
-          <div className={`relative h-44 sm:h-56 md:h-64 w-full bg-gradient-to-br ${gradient} p-6 flex flex-col justify-between overflow-hidden shadow-inner`}>
-            {/* Ambient blur lighting */}
-            <div aria-hidden="true" className="pointer-events-none absolute -bottom-10 -right-10 h-52 w-52 rounded-full bg-white/15 blur-2xl" />
-            <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/4 h-36 w-36 rounded-full bg-[#2DD4BF]/20 blur-2xl" />
+          <div className={`relative h-48 sm:h-56 md:h-64 w-full bg-gradient-to-br ${gradient} overflow-hidden`}>
+            {/* Ambient blur lighting — layered for depth */}
+            <div aria-hidden="true" className="pointer-events-none absolute -bottom-12 -right-12 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute -top-8 left-1/4 h-48 w-48 rounded-full bg-[#2DD4BF]/15 blur-3xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 h-40 w-80 rounded-full bg-white/5 blur-2xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute -top-6 -left-6 h-32 w-32 rounded-full bg-[#D98264]/20 blur-2xl" />
 
             {/* Travel Stickers & Flight Path graphics overlay */}
             <TripHeroStickers destination={trip.destination} status={status} />
