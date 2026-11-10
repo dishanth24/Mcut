@@ -1,0 +1,138 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "trip_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "amount_minor": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "expense_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "merchant": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "receipt_uri": {
+      "type": "string"
+    },
+    "split_method": {
+      "type": "string",
+      "enum": [
+        "equal",
+        "exact",
+        "percent",
+        "shares"
+      ],
+      "default": "equal"
+    },
+    "payers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "shares": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "amount_minor": {
+            "type": "number"
+          },
+          "weight": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User ids of everyone in the trip"
+    }
+  },
+  "required": [
+    "trip_id",
+    "title",
+    "amount_minor",
+    "currency"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.members": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.members": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "update": {
+      "data.members": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "delete": {
+      "data.members": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "TripInvite",
+  "type": "object",
+  "properties": {
+    "trip_id": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string"
+    },
+    "trip_name": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "revoked": {
+      "type": "boolean",
+      "default": false
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User ids of everyone in the trip"
+    }
+  },
+  "required": [
+    "trip_id",
+    "token"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.members": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.members": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

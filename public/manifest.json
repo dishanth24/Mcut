@@ -1,0 +1,16 @@
+{
+  "name": "Mcut — Split the trip",
+  "short_name": "Mcut",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "description": "Shared trip expenses, fair splits and smart settle-up for friends who travel together.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
