@@ -1,15 +1,15 @@
 import React, { Suspense, lazy } from 'react';
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
+import { Toaster } from './components/ui/toaster.jsx';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from './lib/query-client.js';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import { ThemeProvider } from '@/lib/ThemeContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { AuthProvider, useAuth } from './lib/AuthContext';
+import { ThemeProvider } from './lib/ThemeContext';
+import UserNotRegisteredError from './components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import AppShell from '@/components/layout/AppShell';
+import ProtectedRoute from './components/ProtectedRoute';
+import AppShell from './components/layout/AppShell';
 
 // Lazy-loaded route pages for code-splitting and faster initial bundle loading
 const Landing = lazy(() => import('@/pages/Landing'));
